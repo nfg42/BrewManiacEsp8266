@@ -13,6 +13,9 @@
 #include <EEPROM.h>
 #include <OneWire.h>
 #include <PID_v1.h>
+#include <pcf8574_esp.h>
+#include <ESP8266httpUpdate.h>
+#include <LiquidCrystal_I2C.h>
 
 #include "config.h"
 #include "pins.h"

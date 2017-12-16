@@ -27,6 +27,9 @@ PWM controlled heating instead of PID controlled. Customized 4 stages: pre-heat,
 
 
 ## Update History
+ * TBD [12/xx/2017]
+    * Add phase corrected PWM code to allow better temp control.
+
  * 0.3.3 [12/06/2017]
     * bugs fixed.
     * Moveable control panel, progress table, and temperature chart.

@@ -17,15 +17,21 @@
 */
 
 #define BUTTON_USE_EXT true
+#define BUTTON_USE_AVR false
 
 #define HEATER_USE_EXT false
+#define HEATER_USE_AVR false
 #define PUMP_USE_EXT false
+#define PUMP_USE_AVR false
 #define BUZZER_USE_EXT false
+#define BUZZER_USE_AVR false
 
 //#define PUMP_INVERTED_LOGIC true
 // with all address pins grounded, PCF8574 is 0x20 while pCF8574A is 0x38
 #define PCF8574_ADDRESS 0x20
 //#define PCF8574_ADDRESS 0x38
+
+#define AVR_ADDRESS 0x09
 
 //Using ESP8266 PINs as input seems to be a good idea
 
@@ -39,36 +45,47 @@
 // the following pin are group into Output & Input
 // Input is for button, while output is for heater,pump, and buzzer.
 
-#if BUTTON_USE_EXT !=true
-#define ButtonUpPin    NODEMCU_PIN_D3
-#define ButtonDownPin   NODEMCU_PIN_D4
-#define ButtonStartPin  NODEMCU_PIN_D5
-#define ButtonEnterPin  NODEMCU_PIN_D7
-#else
+#if BUTTON_USE_EXT == true
 
 #define ButtonUpPin    2 // P1
 #define ButtonDownPin  1 // p0 NODEMCU_PIN_D4
 #define ButtonStartPin  8 //P3 NODEMCU_PIN_D5
 #define ButtonEnterPin  4 //P2 NODEMCU_PIN_D6
 
+#elif BUTTON_USE_AVR == true
+//AVR Code Here
+
+#else
+
+#define ButtonUpPin    NODEMCU_PIN_D3
+#define ButtonDownPin   NODEMCU_PIN_D4
+#define ButtonStartPin  NODEMCU_PIN_D5
+#define ButtonEnterPin  NODEMCU_PIN_D7
+
 #endif
 
-#if PUMP_USE_EXT != true
-#define PumpControlPin  NODEMCU_PIN_D5
-#else
+#if PUMP_USE_EXT == true
 #define ExPumpControlPin  5
+#elif PUMP_USE_AVR == true
+//AVR Code Here
+#else
+#define PumpControlPin  NODEMCU_PIN_D5
 #endif
 
-#if HEATER_USE_EXT != true
-#define HeatControlPin  NODEMCU_PIN_D7
-#else
+#if HEATER_USE_EXT == true
 #define ExHeatControlPin  7
+#elif HEATER_USE_AVR == true
+//AVR Code Here
+#else
+#define HeatControlPin  NODEMCU_PIN_D7
 #endif
 
-#if BUZZER_USE_EXT != true
-#define BuzzControlPin NODEMCU_PIN_D0
-#else
+#if BUZZER_USE_EXT == true
 #define ExBuzzControlPin 6
+#elif BUZZER_USE_AVR == true
+//AVR Code Here
+#else
+#define BuzzControlPin NODEMCU_PIN_D0
 #endif
 
 
@@ -79,12 +96,7 @@ PCF8574 pcf8574(PCF8574_ADDRESS,I2C_SDA, I2C_SCL);
 // Buttons are INPUT
 // byte btnReadPin(byte p){ return digitalRead(p);}
 
-#if BUTTON_USE_EXT !=true
-
-void btnPrepareRead(void){}
-#define btnReadPin digitalRead
-
-#else
+#if BUTTON_USE_EXT == true
 
 byte _portvalue;
 void btnPrepareRead(void)
@@ -97,21 +109,35 @@ byte btnReadPin(byte pin)
 	return (_portvalue & pin);
 }
 
+#elif BUTTON_USE_AVR == true
+//AVR Code Here
+
+#else
+
+void btnPrepareRead(void){}
+#define btnReadPin digitalRead
+
 #endif
 
 // Heater, Pump, Buzz are OUTPUTs
 inline void setHeaterOut(byte v)
 {
-#if HEATER_USE_EXT != true
-	digitalWrite (HeatControlPin, v);
-#else
+#if HEATER_USE_EXT == true
 	pcf8574.write(ExHeatControlPin,v);
+#elif HEATER_USE_AVR == true
+//AVR Code Here
+#else
+	digitalWrite (HeatControlPin, v);
 #endif
 }
 
 inline void setPumpOut(byte v)
 {
-#if PUMP_USE_EXT != true
+#if PUMP_USE_EXT == true
+	pcf8574.write(ExPumpControlPin,v);
+#elif PUMP_USE_AVR == true
+//AVR Code Here
+#else
 
 #if PUMP_INVERTED_LOGIC
 	digitalWrite (PumpControlPin, (v==LOW)? HIGH:LOW);
@@ -119,17 +145,17 @@ inline void setPumpOut(byte v)
 	digitalWrite (PumpControlPin, v);
 #endif
 
-#else
-	pcf8574.write(ExPumpControlPin,v);
 #endif
 }
 
 inline void setBuzzOut(byte v)
 {
-#if BUZZER_USE_EXT != true
-	digitalWrite (BuzzControlPin, v);
-#else
+#if BUZZER_USE_EXT == true
 	pcf8574.write(ExBuzzControlPin,v);
+#elif BUZZER_USE_AVR == true
+//AVR Code Here
+#else
+	digitalWrite (BuzzControlPin, v);
 #endif
 }
 
@@ -153,26 +179,30 @@ void initIOPins(void)
 //	pcf8574.begin();
 #endif
 
-#if BUTTON_USE_EXT !=true
+#if BUTTON_USE_EXT == true
+	_portvalue=0;
+
+#elif BUTTON_USE_AVR == true
+//AVR Code Here
+
+#else
   	pinMode (ButtonUpPin,    INPUT_PULLUP);
   	pinMode (ButtonDownPin,    INPUT_PULLUP);
   	pinMode (ButtonStartPin, INPUT_PULLUP);
   	pinMode (ButtonEnterPin, INPUT_PULLUP);
-#else
-	_portvalue=0;
 #endif
 
-#if HEATER_USE_EXT != true
+#if (HEATER_USE_EXT == false) && (HEATER_USE_AVR == false)
 	pinMode (HeatControlPin, OUTPUT);
 #endif
 	setHeaterOut(LOW);
 
-#if PUMP_USE_EXT != true
+#if (PUMP_USE_EXT == false) && (PUMP_USE_AVR == false) 
 	pinMode (PumpControlPin, OUTPUT);
 #endif
 	setPumpOut(LOW);
 
-#if BUZZER_USE_EXT != true
+#if (BUZZER_USE_EXT == false) && (BUZZER_USE_AVR == false) 
 	pinMode (BuzzControlPin, OUTPUT);
 #endif
 	setBuzzOut(LOW);
