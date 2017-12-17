@@ -955,7 +955,7 @@ void displayIP(bool apmode){
 void setup(void){
 	//0. initilze debug port
 	#if SerialDebug == true
-  	DebugPort.begin(115200);
+  	DebugPort.begin(9600);
   	DebugOut("Start..\n");
   	DebugPort.setDebugOutput(true);
   	#endif
