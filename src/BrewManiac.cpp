@@ -6731,12 +6731,15 @@ void startBrewManiac()
 	switchApplication(MAIN_SCREEN);
 }
 
+
 void brewmaniac_setup() {
 
 	EepromInit();
 	automation.load();
 	// ESP8266
-  	Wire.begin(I2C_SDA,I2C_SCL);
+
+  	//Wire.begin(I2C_SDA,I2C_SCL);
+    Wire.begin();
 
 	initIOPins();
 

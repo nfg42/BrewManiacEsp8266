@@ -35,8 +35,8 @@
 #define AVR_ADDRESS 0x09
 
 //Using ESP8266 PINs as input seems to be a good idea
-#define I2C_SCL NODEMCU_PIN_D1
-#define I2C_SDA NODEMCU_PIN_D2
+//#define I2C_SCL NODEMCU_PIN_D1
+//#define I2C_SDA NODEMCU_PIN_D2
 #define SensorPin    NODEMCU_PIN_D6
 
 #define AuxHeatControlPin NODEMCU_PIN_D8
@@ -227,12 +227,15 @@ inline void setSecondaryHeaterOut(byte v)
 
 void initIOPins(void)
 {
+
+
 #if (BUTTON_USE_EXT == true) || (HEATER_USE_EXT == true) || (PUMP_USE_EXT == true) ||( BUZZER_USE_EXT == true)
 //	pcf8574.begin();
 #endif
 
 #if (BUTTON_USE_AVR == true) || (HEATER_USE_AVR == true) || (PUMP_USE_AVR == true) ||( BUZZER_USE_AVR == true)
     //Wire.begin();       // join i2c bus sda,scl
+
 #endif
 
 #if BUTTON_USE_EXT == true

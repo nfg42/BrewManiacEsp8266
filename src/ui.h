@@ -290,11 +290,11 @@ void uiLcdAssignSymbol(byte sid,const byte* symbol)
 void uiScanLcdAddress(void)
 {
 	// wire.begin() should be called at PCF8574F constructor.
-	Wire.begin();
+	//Wire.begin();
 
 	for(byte address = 0; address <= 127; address++ )
  	{
- 		if(address == PCF8574_ADDRESS) continue;
+ 		if((address == PCF8574_ADDRESS) || (address == AVR_ADDRESS)) continue;
  		Wire.beginTransmission(address);
 		byte error = Wire.endTransmission();
  		if (error == 0)
