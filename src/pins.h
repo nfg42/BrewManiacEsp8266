@@ -51,7 +51,7 @@
 #define ButtonEnterPin  4 //P2 NODEMCU_PIN_D6
 
 #elif BUTTON_USE_AVR == true
-#define ButtonCMD       1 // Command to sent to AVR to read buttons
+#define ButtonCMD       1 // Command to read buttons
 #define ButtonUpPin     2 // P1
 #define ButtonDownPin   1 // p0 NODEMCU_PIN_D4
 #define ButtonStartPin  8 //P3 NODEMCU_PIN_D5
@@ -68,7 +68,7 @@
 #if PUMP_USE_EXT == true
 #define ExPumpControlPin  5
 #elif PUMP_USE_AVR == true
-#define PumpCMD       2 // Command to sent to AVR for pump output
+#define PumpCMD       2 // Command for pump output
 #else
 #define PumpControlPin  NODEMCU_PIN_D5
 #endif
@@ -76,7 +76,9 @@
 #if HEATER_USE_EXT == true
 #define ExHeatControlPin  7
 #elif HEATER_USE_AVR == true
-#define HeaterCMD       3 // Command to sent to AVR to enable Heater output
+#define HeaterCMD       3 // Command to enable Heater output
+#define ACRelayCMD       6 // Command to enable AC Relay output
+#define PWMCMD       4 // Command to update PWM output
 #else
 #define HeatControlPin  NODEMCU_PIN_D7
 #endif
@@ -84,7 +86,7 @@
 #if BUZZER_USE_EXT == true
 #define ExBuzzControlPin 6
 #elif BUZZER_USE_AVR == true
-#define BuzzCMD       4 // Command to sent to AVR for Buzzer output
+#define BuzzCMD       5 // Command for Buzzer output
 #else
 #define BuzzControlPin NODEMCU_PIN_D0
 #endif
@@ -132,6 +134,33 @@ void btnPrepareRead(void){}
 
 #endif
 
+byte oldpwm = 0;
+inline void setHeaterPWM(byte v) 
+#if HEATER_USE_AVR == true
+{
+    if (oldpwm != v) {
+      Wire.beginTransmission(AVR_ADDRESS);
+      Wire.write(PWMCMD); // Transfer command ("8") to set pin command
+      Wire.write(v); // Transfer command ("8") to set pin command
+      int error = Wire.endTransmission();
+      oldpwm = v;
+    }
+}
+#else
+{}
+#endif
+
+inline void setHeaterRelay(byte v) 
+#if HEATER_USE_AVR == true
+{
+      Wire.beginTransmission(AVR_ADDRESS);
+      Wire.write(ACRelayCMD); // Transfer command ("8") to set pin command
+      Wire.write(v); // Transfer command ("8") to set pin command
+      int error = Wire.endTransmission();
+}
+#else
+{}
+#endif
 // Heater, Pump, Buzz are OUTPUTs
 inline void setHeaterOut(byte v)
 {
@@ -142,6 +171,7 @@ inline void setHeaterOut(byte v)
     Wire.write(HeaterCMD); // Transfer command ("8") to set pin command
     Wire.write(v); // Transfer command ("8") to set pin command
     int error = Wire.endTransmission();
+    oldpwm = 0;
 #else
 	digitalWrite (HeatControlPin, v);
 #endif

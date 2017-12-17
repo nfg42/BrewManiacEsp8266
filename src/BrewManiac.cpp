@@ -1267,24 +1267,15 @@ void heatPhysicalOn(void)
 	    #if SecondaryHeaterSupport == true
 	    bool primary = _gElementInUseMask & PrimaryHeaterMask;
 	    bool secondary =_gElementInUseMask & SecondaryHeaterMask;
-#if BUTTON_USE_AVR == true
-	    if(primary) setHeaterOut(pidOutput);
-	    if(secondary) setSecondaryHeaterOut(pidOutputHIGH);
-#else
 	    if(primary) setHeaterOut(HIGH);
 	    if(secondary) setSecondaryHeaterOut(HIGH);
-#endif
 
 		uiHeatingStatus(primary? HeatingStatus_On:HeatingStatus_Off,secondary? HeatingStatus_On:HeatingStatus_Off);
 		wiReportHeater(primary? HeatingStatus_On:HeatingStatus_Off,secondary? HeatingStatus_On:HeatingStatus_Off);
 
 	    #else
 		
-#if BUTTON_USE_AVR == true
-	    setHeaterOut(pidOutput);
-#else
 	    setHeaterOut(HIGH);
-#endif
 		uiHeatingStatus(HeatingStatus_On);
 		wiReportHeater(HeatingStatus_On);
 		#endif
@@ -1302,13 +1293,9 @@ void heatPhysicalOff(void)
 
 	if(_physicalHeattingOn)
 	{
-#if BUTTON_USE_AVR == true
-	    setHeaterOut(0);
-	    setSecondaryHeaterOut(0);
-#else
+
 		setHeaterOut(LOW);
 		setSecondaryHeaterOut(LOW);
-#endif
 		_physicalHeattingOn=false;
 
 	}
@@ -1328,11 +1315,7 @@ void heatPhysicalOff(void)
 #else
 	if(_physicalHeattingOn)
 	{
-#if BUTTON_USE_AVR == true
-	    setHeaterOut(0);
-#else
 		setHeaterOut(LOW);
-#endif
 		_physicalHeattingOn=false;
 	}
 	if(gIsHeatOn){
@@ -1509,6 +1492,8 @@ void heatInitialize(void)
 
 	_physicalHeattingOn=false;
 	gIsHeatOn=false;
+	setHeaterRelay(false);
+
 	gIsHeatProgramOff=false;
 
 #if SpargeHeaterSupport
@@ -1551,6 +1536,8 @@ void heatLoadParameters(void)
 void heatOff(void)
 {
 	gIsHeatOn = false;
+	setHeaterRelay(false);
+
 	uiClearPwmDisplay();
 	#if SpargeHeaterSupport
 	requestHeaterOff();
@@ -1584,6 +1571,8 @@ void heatOn(bool pidmode=true)
 #endif
 	gIsHeatOn = true;
 	gIsHeatProgramOff=false;
+
+	setHeaterRelay(true);
 
 	// should run through heating algorithm first
 	// so that the correct symbol can be shown
@@ -1686,6 +1675,7 @@ void heaterControl(void)
     wiReportPwm(pidOutput);
 	uiShowPwmLabel();
 	uiShowPwmValue(pidOutput);
+	setHeaterPWM(pidOutput);
 
 #if 0 // SerialDebug == true
     	DebugPort.print("PID.Compute");
@@ -1699,7 +1689,7 @@ void heaterControl(void)
 #endif
 
 	// PWM
-#if BUTTON_USE_AVR == true
+#if HEATER_USE_AVR == true
   	if (pidOutput > 0)
   	{
   		if(!_physicalHeattingOn)
