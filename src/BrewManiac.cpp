@@ -1267,14 +1267,24 @@ void heatPhysicalOn(void)
 	    #if SecondaryHeaterSupport == true
 	    bool primary = _gElementInUseMask & PrimaryHeaterMask;
 	    bool secondary =_gElementInUseMask & SecondaryHeaterMask;
+#if BUTTON_USE_AVR == true
+	    if(primary) setHeaterOut(pidOutput);
+	    if(secondary) setSecondaryHeaterOut(pidOutputHIGH);
+#else
 	    if(primary) setHeaterOut(HIGH);
 	    if(secondary) setSecondaryHeaterOut(HIGH);
+#endif
 
 		uiHeatingStatus(primary? HeatingStatus_On:HeatingStatus_Off,secondary? HeatingStatus_On:HeatingStatus_Off);
 		wiReportHeater(primary? HeatingStatus_On:HeatingStatus_Off,secondary? HeatingStatus_On:HeatingStatus_Off);
 
 	    #else
-		setHeaterOut(HIGH);
+		
+#if BUTTON_USE_AVR == true
+	    setHeaterOut(pidOutput);
+#else
+	    setHeaterOut(HIGH);
+#endif
 		uiHeatingStatus(HeatingStatus_On);
 		wiReportHeater(HeatingStatus_On);
 		#endif
@@ -1292,9 +1302,15 @@ void heatPhysicalOff(void)
 
 	if(_physicalHeattingOn)
 	{
+#if BUTTON_USE_AVR == true
+	    setHeaterOut(0);
+	    setSecondaryHeaterOut(0);
+#else
 		setHeaterOut(LOW);
 		setSecondaryHeaterOut(LOW);
+#endif
 		_physicalHeattingOn=false;
+
 	}
 	if(gIsHeatOn){
 
@@ -1312,7 +1328,11 @@ void heatPhysicalOff(void)
 #else
 	if(_physicalHeattingOn)
 	{
+#if BUTTON_USE_AVR == true
+	    setHeaterOut(0);
+#else
 		setHeaterOut(LOW);
+#endif
 		_physicalHeattingOn=false;
 	}
 	if(gIsHeatOn){
@@ -1531,6 +1551,7 @@ void heatLoadParameters(void)
 void heatOff(void)
 {
 	gIsHeatOn = false;
+	uiClearPwmDisplay();
 	#if SpargeHeaterSupport
 	requestHeaterOff();
 	#else
@@ -1662,6 +1683,9 @@ void heaterControl(void)
 		pidOutput = gBoilHeatOutput * 255.0 / 100.0;
 
   	if(gIsHeatProgramOff) pidOutput=0;
+    wiReportPwm(pidOutput);
+	uiShowPwmLabel();
+	uiShowPwmValue(pidOutput);
 
 #if 0 // SerialDebug == true
     	DebugPort.print("PID.Compute");
@@ -1675,6 +1699,31 @@ void heaterControl(void)
 #endif
 
 	// PWM
+#if BUTTON_USE_AVR == true
+  	if (pidOutput > 0)
+  	{
+  		if(!_physicalHeattingOn)
+  		{
+  			#if SpargeHeaterSupport
+			requestHeaterOn();
+	  		#else
+   	 		heatPhysicalOn();
+   	 		#endif
+   	 	}
+  	}
+  	else
+  	{
+  		// turn off heat
+  		if(_physicalHeattingOn)
+  		{
+  			#if SpargeHeaterSupport
+			requestHeaterOff();
+	  		#else
+  			heatPhysicalOff();
+  			#endif
+  		}
+  	}
+#else
   	unsigned long now = millis();
   	if (now - _windowStartTime > (unsigned int) _heatWindowSize * 250)
   	{
@@ -1705,6 +1754,7 @@ void heaterControl(void)
   			#endif
   		}
   	}
+#endif
 } // end of heaterControl
 
 void heatThread(void)
@@ -3369,11 +3419,11 @@ void togglePwmInput(void)
 		if(!gIsEnterPwm)
 		{
 //			DBG_PRINTF("togglePwmInput\n");
-			uiShowPwmLabel();
-			uiShowPwmValue(gBoilHeatOutput);
+			//uiShowPwmLabel();
+			//uiShowPwmValue(gBoilHeatOutput);
 			gIsEnterPwm=true;
 
-			wiReportPwm();
+			//wiReportPwm();
 			wiTogglePwm();
 		}
 	}
@@ -3385,7 +3435,7 @@ void togglePwmInput(void)
 			// turn off
 			uiClearPwmDisplay();
 			gIsEnterPwm = false;
-
+            //wiReportPwm();
 			wiTogglePwm();
 		}
 	}
@@ -3416,9 +3466,9 @@ void adjustPwm(int adjust)
 
 	if(gBoilHeatOutput > 100) gBoilHeatOutput=100;
 
-	uiShowPwmValue(gBoilHeatOutput);
+	//uiShowPwmValue(gBoilHeatOutput);
 	DBG_PRINTF("adjustPwm\n");
-	wiReportPwm();
+	//wiReportPwm();
 }
 
 boolean processAdjustButtons(void)
@@ -6176,7 +6226,7 @@ protected:
 		uiButtonLabel(ButtonLabel(Up_Down_Heat_Pmp));
 		uiTempDisplaySetPosition(TemperatureManualModePosition);
 		uiShowPwmLabel();
-		uiShowPwmValue(gBoilHeatOutput);
+		//uiShowPwmValue(gBoilHeatOutput);
 		gIsEnterPwm=true;
 		gSettingTemperature = DEFAULT_MANUL_MODE_TEMPERATURE;
 		wiReportSettingTemperature();
@@ -6441,8 +6491,8 @@ protected:
 	
 	void changePwmValue(uint8_t pwm){
 		gBoilHeatOutput = pwm;
-		uiShowPwmValue(gBoilHeatOutput);
-		wiReportPwm();
+		//uiShowPwmValue(gBoilHeatOutput);
+		//wiReportPwm();
 	}
 
 	bool handleAdjustPwm(void){

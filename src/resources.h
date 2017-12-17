@@ -202,7 +202,7 @@ StringConst( Sparge_Temp,"Sparge Temp");
 StringConst( Temp_Diff,"Temp Diff");
 #endif
 
-StringConst( PWM_Is, "PWM=   %");
+StringConst( PWM_Is, "PWM=   ");
 
 // Setting strings
 StringConst( Setup, "SETUP MENU");

@@ -54,9 +54,10 @@ void wiReportEvent(byte event)
 	bmWeb.brewEvent(event);
 }
 
-void wiReportPwm(void)
+void wiReportPwm(byte pwm)
 {
-	bmWeb.updatePwm(gBoilHeatOutput);
+//	bmWeb.updatePwm(gBoilHeatOutput);
+	bmWeb.updatePwm(pwm);
 }
 
 void wiReportSettingTemperature(void)
