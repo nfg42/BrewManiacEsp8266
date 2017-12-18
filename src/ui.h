@@ -851,7 +851,7 @@ void uiShowPwmValue(byte pwm)
 {
 	char buffer[8];
 	// make it simple, should optimize later
-/*
+
 #if	MaximumNumberOfSensors > 1
 	if(pwm>=100){
 		buffer[0]='H';
@@ -876,10 +876,6 @@ void uiShowPwmValue(byte pwm)
 	buffer[3]='\0';
 	uiLcdPrint(5,2,buffer);
 #endif
-*/
-
-    int digitNum=sprintInt((char*)buffer,pwm);
-    buffer[digitNum]='\0';
 uiLcdPrint(5,2,buffer);
 }
 

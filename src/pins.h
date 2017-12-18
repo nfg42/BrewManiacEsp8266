@@ -96,6 +96,10 @@
 PCF8574 pcf8574(PCF8574_ADDRESS,I2C_SDA, I2C_SCL);
 #endif
 
+#if (HEATER_USE_AVR == true) && ((SpargeHeaterSupport == true) || (SecondaryHeaterSupport == true))
+#error "Dual Heaters are not supported with AVR"
+#endif
+
 // Buttons are INPUT
 // byte btnReadPin(byte p){ return digitalRead(p);}
 

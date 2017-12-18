@@ -1538,7 +1538,6 @@ void heatOff(void)
 	gIsHeatOn = false;
 	setHeaterRelay(false);
 
-	uiClearPwmDisplay();
 	#if SpargeHeaterSupport
 	requestHeaterOff();
 	#else
@@ -1663,7 +1662,7 @@ void heaterControl(void)
   	// In boiling stage, the output value is reassigned.
 #if PwmHeatingSupport
 	if(_heatingMode == HeatingModePWM){
-		pidOutput = gBoilHeatOutput * 255.0 / 100.0;
+		pidOutput = gBoilHeatOutput; * 255.0 / 100.0;
 		//DebugPort.printf("gIsHeatProgramOff=%d, gBoilHeatOutput=%d pidOutput=",gIsHeatProgramOff,gBoilHeatOutput);
 		//DebugPort.println(pidOutput);
 	} else
@@ -1673,8 +1672,6 @@ void heaterControl(void)
 
   	if(gIsHeatProgramOff) pidOutput=0;
     wiReportPwm(pidOutput);
-	uiShowPwmLabel();
-	uiShowPwmValue(pidOutput);
 	setHeaterPWM(pidOutput);
 
 #if 0 // SerialDebug == true
@@ -3409,8 +3406,8 @@ void togglePwmInput(void)
 		if(!gIsEnterPwm)
 		{
 //			DBG_PRINTF("togglePwmInput\n");
-			//uiShowPwmLabel();
-			//uiShowPwmValue(gBoilHeatOutput);
+			uiShowPwmLabel();
+			uiShowPwmValue(gBoilHeatOutput);
 			gIsEnterPwm=true;
 
 			//wiReportPwm();
@@ -3456,7 +3453,7 @@ void adjustPwm(int adjust)
 
 	if(gBoilHeatOutput > 100) gBoilHeatOutput=100;
 
-	//uiShowPwmValue(gBoilHeatOutput);
+	uiShowPwmValue(gBoilHeatOutput);
 	DBG_PRINTF("adjustPwm\n");
 	//wiReportPwm();
 }
@@ -6216,7 +6213,7 @@ protected:
 		uiButtonLabel(ButtonLabel(Up_Down_Heat_Pmp));
 		uiTempDisplaySetPosition(TemperatureManualModePosition);
 		uiShowPwmLabel();
-		//uiShowPwmValue(gBoilHeatOutput);
+		uiShowPwmValue(gBoilHeatOutput);
 		gIsEnterPwm=true;
 		gSettingTemperature = DEFAULT_MANUL_MODE_TEMPERATURE;
 		wiReportSettingTemperature();
@@ -6481,7 +6478,7 @@ protected:
 	
 	void changePwmValue(uint8_t pwm){
 		gBoilHeatOutput = pwm;
-		//uiShowPwmValue(gBoilHeatOutput);
+		uiShowPwmValue(gBoilHeatOutput);
 		//wiReportPwm();
 	}
 
