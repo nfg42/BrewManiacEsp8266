@@ -9,7 +9,7 @@
 #define NODEMCU_PIN_D0 16	Buzzer
 #define NODEMCU_PIN_D1 5	 [I/O]SCL // I2C
 #define NODEMCU_PIN_D2 4	 [I/O]SDA // I2C
-#define NODEMCU_PIN_D3 0
+#define NODEMCU_PIN_D3 0     Saftey Relay
 #define NODEMCU_PIN_D4 2
 #define NODEMCU_PIN_D5 14    Pump
 #define NODEMCU_PIN_D6 12    Sensor
@@ -22,10 +22,13 @@
 
 #define HEATER_USE_EXT false
 #define HEATER_USE_AVR true
-#define PUMP_USE_EXT false
-#define PUMP_USE_AVR true
+#define PUMP_USE_EXT   false
+#define PUMP_USE_AVR   true
 #define BUZZER_USE_EXT false
 #define BUZZER_USE_AVR true
+#define SAFTEY_USE_INT false
+#define SAFTEY_USE_EXT false
+#define SAFTEY_USE_AVR true
 
 //#define PUMP_INVERTED_LOGIC true
 // with all address pins grounded, PCF8574 is 0x20 while pCF8574A is 0x38
@@ -45,20 +48,20 @@
 // Input is for button, while output is for heater,pump, and buzzer.
 
 #if BUTTON_USE_EXT == true
-#define ButtonUpPin    2 // P1
-#define ButtonDownPin  1 // p0 NODEMCU_PIN_D4
-#define ButtonStartPin  8 //P3 NODEMCU_PIN_D5
-#define ButtonEnterPin  4 //P2 NODEMCU_PIN_D6
+#define ButtonUpPin     2 //P1
+#define ButtonDownPin   1 //P0 
+#define ButtonStartPin  8 //P3 
+#define ButtonEnterPin  4 //P2 
 
 #elif BUTTON_USE_AVR == true
-#define ButtonCMD       1 // Command to read buttons
-#define ButtonUpPin     2 // P1
-#define ButtonDownPin   1 // p0 NODEMCU_PIN_D4
-#define ButtonStartPin  8 //P3 NODEMCU_PIN_D5
-#define ButtonEnterPin  4 //P2 NODEMCU_PIN_D6
+#define ButtonCMD       1 //Command to read buttons
+#define ButtonUpPin     2 //P1
+#define ButtonDownPin   1 //P0
+#define ButtonStartPin  8 //P3
+#define ButtonEnterPin  4 //P2
 
 #else
-#define ButtonUpPin    NODEMCU_PIN_D3
+#define ButtonUpPin     NODEMCU_PIN_D3
 #define ButtonDownPin   NODEMCU_PIN_D4
 #define ButtonStartPin  NODEMCU_PIN_D5
 #define ButtonEnterPin  NODEMCU_PIN_D7
@@ -77,8 +80,7 @@
 #define ExHeatControlPin  7
 #elif HEATER_USE_AVR == true
 #define HeaterCMD       3 // Command to enable Heater output
-#define ACRelayCMD       6 // Command to enable AC Relay output
-#define PWMCMD       4 // Command to update PWM output
+#define PWMCMD          4 // Command to update PWM output
 #else
 #define HeatControlPin  NODEMCU_PIN_D7
 #endif
@@ -91,9 +93,28 @@
 #define BuzzControlPin NODEMCU_PIN_D0
 #endif
 
+#if SAFTEY_USE_INT == true
+#if (SAFTEY_USE_EXT == true) || (SAFTEY_USE_AVR == true)
+#error "Dual Saftey Relay not supported"
+#endif
+#define ACRelayPin    NODEMCU_PIN_D3
+#endif
+#if SAFTEY_USE_EXT == true
+#if (SAFTEY_USE_INT == true) || (SAFTEY_USE_AVR == true)
+#error "Dual Saftey Relay not supported"
+#endif
+#define ExACRelayPin 4
+
+#endif
+#if SAFTEY_USE_AVR == true
+#if (SAFTEY_USE_INT == true) || (SAFTEY_USE_EXT == true)
+#error "Dual Saftey Relay not supported"
+#endif
+#define ACRelayCMD       6 // Command to enable AC Relay output
+#endif
 
 #if (BUTTON_USE_EXT == true) || (HEATER_USE_EXT == true) || (PUMP_USE_EXT == true) ||( BUZZER_USE_EXT == true)
-PCF8574 pcf8574(PCF8574_ADDRESS,I2C_SDA, I2C_SCL);
+PCF8574 pcf8574(PCF8574_ADDRESS,SDA, SCL);
 #endif
 
 #if (HEATER_USE_AVR == true) && ((SpargeHeaterSupport == true) || (SecondaryHeaterSupport == true))
@@ -140,31 +161,31 @@ void btnPrepareRead(void){}
 
 byte oldpwm = 0;
 inline void setHeaterPWM(byte v) 
-#if HEATER_USE_AVR == true
 {
-    if (oldpwm != v) {
-      Wire.beginTransmission(AVR_ADDRESS);
-      Wire.write(PWMCMD); // Transfer command ("8") to set pin command
-      Wire.write(v); // Transfer command ("8") to set pin command
-      int error = Wire.endTransmission();
-      oldpwm = v;
-    }
-}
-#else
-{}
+#if HEATER_USE_AVR == true
+  if (oldpwm != v) {
+    Wire.beginTransmission(AVR_ADDRESS);
+    Wire.write(PWMCMD); // Transfer command ("8") to set pin command
+    Wire.write(v); // Transfer command ("8") to set pin command
+    int error = Wire.endTransmission();
+    oldpwm = v;
+  }
 #endif
+}
 
 inline void setHeaterRelay(byte v) 
-#if HEATER_USE_AVR == true
 {
-      Wire.beginTransmission(AVR_ADDRESS);
-      Wire.write(ACRelayCMD); // Transfer command ("8") to set pin command
-      Wire.write(v); // Transfer command ("8") to set pin command
-      int error = Wire.endTransmission();
-}
-#else
-{}
+#if SAFTEY_USE_AVR == true
+  Wire.beginTransmission(AVR_ADDRESS);
+  Wire.write(ACRelayCMD); // Transfer command ("8") to set pin command
+  Wire.write(v); // Transfer command ("8") to set pin command
+  int error = Wire.endTransmission();
+#elif SAFTEY_USE_INT == true
+  digitalWrite (ACRelayPin, (v==LOW)? HIGH:LOW); //Pin is pulled high by programmer so invert logic
+#elif SAFTEY_USE_EXT == true
+  pcf8574.write(ExACRelayPin,v);
 #endif
+}
 // Heater, Pump, Buzz are OUTPUTs
 inline void setHeaterOut(byte v)
 {
@@ -264,6 +285,11 @@ void initIOPins(void)
 	pinMode (PumpControlPin, OUTPUT);
 #endif
 	setPumpOut(LOW);
+
+#if (SAFTEY_USE_INT == true) && (SAFTEY_USE_EXT == false) && (SAFTEY_USE_AVR == false)
+	pinMode (ACRelayPin, OUTPUT);
+#endif
+	setHeaterRelay(LOW);
 
 #if (BUZZER_USE_EXT == false) && (BUZZER_USE_AVR == false) 
 	pinMode (BuzzControlPin, OUTPUT);
